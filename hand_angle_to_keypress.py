@@ -2,93 +2,52 @@ from pynput.keyboard import Controller, Key
 import time
 
 keyboard = Controller()
-last_pressed_player1 = None  # Track the last pressed key for Player 1 (steering)
-last_pressed_player2 = None  # Track the last pressed key for Player 2 (steering)
-is_accelerating_player1 = True  # Track acceleration state for Player 1
-is_accelerating_player2 = True  # Track acceleration state for Player 2
+last_pressed = None #keep track of last keypress
+last_press_time = 0  # Timestamp for the last keypress
+COOLDOWN = 0.5  # Minimum time interval between keypresses (avoid chaos)
 
+#Maps the angle to a keypress
+def send_keypress(angle):
 
-def send_keypress(angle, player, is_left_hand_open, is_right_hand_open):
-    """
-    Maps the angle and palm detection to keypresses and simulates them for the specified player.
-    """
-    global last_pressed_player1, last_pressed_player2
-    global is_accelerating_player1, is_accelerating_player2
+    global last_pressed, last_press_time
 
-    if player == "player1":
-        last_pressed = last_pressed_player1
-        left_key = 'a'  # Player 1 left turn
-        right_key = 'd'  # Player 1 right turn
-        accel_key = 'w'  # Player 1 acceleration
-        right_hand_key = 'z'  # Player 1 right hand action
-        is_accelerating = is_accelerating_player1
-    elif player == "player2":
-        last_pressed = last_pressed_player2
-        left_key = 'j'  # Player 2 left turn
-        right_key = 'l'  # Player 2 right turn
-        accel_key = 'i'  # Player 2 acceleration
-        right_hand_key = 'm'  # Player 2 right hand action
-        is_accelerating = is_accelerating_player2
-    else:
-        print(f"Unknown player: {player}")
-        return
+    current_time = time.time()
 
-    # Handle left hand open (stop acceleration)
-    if is_left_hand_open:
-        if is_accelerating:
-            keyboard.release(accel_key)
-            if player == "player1":
-                is_accelerating_player1 = False
-            else:
-                is_accelerating_player2 = False
-            print(f"{player}: Acceleration stopped (left hand open)")
-    else:
-        if not is_accelerating:
-            keyboard.press(accel_key)
-            if player == "player1":
-                is_accelerating_player1 = True
-            else:
-                is_accelerating_player2 = True
-            print(f"{player}: Acceleration started (left hand closed)")
-
-    # Handle right hand open (special keypress)
-    if is_right_hand_open:
-        keyboard.press(right_hand_key)
-        keyboard.release(right_hand_key)
-        print(f"{player}: Right hand action triggered")
-
-    # Handle turning left
     if -75 < angle < -20:
-        if last_pressed != left_key:
-            # Press the left key and release the right key
-            keyboard.press(left_key)
-            keyboard.release(right_key)
-            if player == "player1":
-                last_pressed_player1 = left_key
-            else:
-                last_pressed_player2 = left_key
-            print(f"{player}: Left key pressed")
+        # simulate turning left
+        # if last_pressed != Key.left or (current_time - last_press_time > COOLDOWN):
+            keyboard.press(Key.left)
+            time.sleep(0.2)
+            keyboard.release(Key.right)  # Ensure the opposite direction is released
+            keyboard.release(Key.left)  #not turn too much
+            last_pressed = Key.left
+            last_press_time = current_time
+            print("Left key pressed")
 
-    # Handle turning right
     elif 20 < angle < 75:
-        if last_pressed != right_key:
-            # Press the right key and release the left key
-            keyboard.press(right_key)
-            keyboard.release(left_key)
-            if player == "player1":
-                last_pressed_player1 = right_key
-            else:
-                last_pressed_player2 = right_key
-            print(f"{player}: Right key pressed")
+        #simulate turning right
+        # if last_pressed != Key.right or (current_time - last_press_time > COOLDOWN):
+            keyboard.press(Key.right)
+            time.sleep(0.2)
+            keyboard.release(Key.left)  # Ensure the opposite direction is released
+            keyboard.release(Key.right)  #not turn too much
+            last_pressed = Key.right
+            last_press_time = current_time
+            print("Right key pressed")
 
-    # Handle straight (no keys pressed)
     elif -20 < angle < 20:
+        # Simulate "Go straight" (no left/right key held)
         if last_pressed is not None:
-            # Release both keys
-            keyboard.release(left_key)
-            keyboard.release(right_key)
-            if player == "player1":
-                last_pressed_player1 = None
-            else:
-                last_pressed_player2 = None
-            print(f"{player}: Straight (no keys pressed)")
+            keyboard.release(Key.left)
+            keyboard.release(Key.right)
+            last_pressed = None
+            print("Straight (no key)")
+
+    else:
+        # Keep the last input
+        if last_pressed == Key.left:
+            keyboard.press(Key.left)
+            print("Continuing left key")
+        elif last_pressed == Key.right:
+            keyboard.press(Key.right)
+            print("Continuing right key")
