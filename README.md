@@ -1,6 +1,6 @@
 # CarioMart_CheeseHacks2024
 
-## CHANGE TO CODE MODE TO VIEW
+#### CHANGE TO CODE MODE TO VIEW
 
 Introduction:
   Ever wanted to control Mario Kart with just your hands? This project turns that dream into reality! Using real-time hand tracking, we’ve built a fun, gesture-based controller that lets two players race without needing a physical game controller. Just raise your hands, make some gestures, and let the game begin!
